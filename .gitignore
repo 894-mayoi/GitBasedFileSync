@@ -1,0 +1,8 @@
+﻿
+GitBasedFileSync/bin/
+GitBasedFileSync/obj/
+
+.idea/
+.vs/
+
+GitBasedFileSync.sln.DotSettings.user
