@@ -22,6 +22,8 @@ public static class Config
             var path = task.GetField("path").GetString();
             var repo = task.GetField("repo").GetString();
             var cron = task.GetField("cron").GetString();
+            var ignore = task.GetField("ignore")?.GetArray()?.Select(x => x.GetString()).ToList() ?? [];
+            var lfs = task.GetField("lfs")?.GetArray()?.Select(x => x.GetString()).ToList() ?? [];
 
             if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(path) || string.IsNullOrEmpty(repo) ||
                 string.IsNullOrEmpty(cron)) throw new InitException($"任务配置不完整，请检查{ConfigFile}文件内容。\n{task}");
@@ -38,7 +40,9 @@ public static class Config
                 Name = name,
                 Path = Path.GetFullPath(path),
                 Repo = repo,
-                Cron = cron
+                Cron = cron,
+                Ignore = ignore,
+                Lfs = lfs
             });
         }
 
@@ -48,8 +52,10 @@ public static class Config
 
 public class TaskInfo
 {
-    public required string Name { get; set; }
-    public required string Path { get; set; }
-    public required string Repo { get; set; }
-    public required string Cron { get; set; }
+    public required string Name { get; init; }
+    public required string Path { get; init; }
+    public required string Repo { get; init; }
+    public required string Cron { get; init; }
+    public required List<string> Ignore { get; init; }
+    public required List<string> Lfs { get; init; }
 }

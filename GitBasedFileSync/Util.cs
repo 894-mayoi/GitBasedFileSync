@@ -1,4 +1,6 @@
-﻿namespace GitBasedFileSync;
+﻿using System.Diagnostics;
+
+namespace GitBasedFileSync;
 
 public static class Util
 {
@@ -40,5 +42,41 @@ public static class Util
         {
             return (false, "路径包含无效格式");
         }
+    }
+
+    public static (int exitCode, string output, string error) ExecuteGitCommand(
+        string localRepoPath,
+        List<string> command,
+        bool throwOnError = false
+    )
+    {
+        var startInfo = new ProcessStartInfo
+        {
+            FileName = "git",
+            Arguments = string.Join(" ", command),
+            WorkingDirectory = localRepoPath, // 本地仓库路径
+            RedirectStandardOutput = true, // 重定向输出
+            RedirectStandardError = true, // 重定向错误
+            UseShellExecute = false, // 不启用Shell执行
+            CreateNoWindow = true // 不创建窗口
+        };
+
+        using var process = new Process();
+        process.StartInfo = startInfo;
+
+        process.Start();
+        var output = process.StandardOutput.ReadToEnd();
+        var error = process.StandardError.ReadToEnd();
+        process.WaitForExit(); // 等待命令执行完成
+        var exitCode = process.ExitCode;
+        // ReSharper disable once InvertIf
+        if (throwOnError && exitCode != 0)
+        {
+            Log.Logger.Error("Git命令 {Cmd} 执行失败: {ExitCode}  {Error}", $"{startInfo.FileName} {startInfo.Arguments}",
+                exitCode, error);
+            throw new Exception($"Git命令执行失败: {error}");
+        }
+
+        return (exitCode, output, error);
     }
 }
