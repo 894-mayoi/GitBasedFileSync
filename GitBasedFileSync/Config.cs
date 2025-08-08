@@ -18,12 +18,12 @@ public static class Config
         var names = new HashSet<string>();
         foreach (var task in tasks)
         {
-            var name = task.GetField("name").GetString();
-            var path = task.GetField("path").GetString();
-            var repo = task.GetField("repo").GetString();
-            var cron = task.GetField("cron").GetString();
-            var ignore = task.GetField("ignore")?.GetArray()?.Select(x => x.GetString()).ToList() ?? [];
-            var lfs = task.GetField("lfs")?.GetArray()?.Select(x => x.GetString()).ToList() ?? [];
+            var name = task.GetFieldOrNull("name")?.GetString();
+            var path = task.GetFieldOrNull("path")?.GetString();
+            var repo = task.GetFieldOrNull("repo")?.GetString();
+            var cron = task.GetFieldOrNull("cron")?.GetString();
+            var ignore = task.GetFieldOrNull("ignore")?.GetArray()?.Select(x => x.GetString()).ToList() ?? [];
+            var lfs = task.GetFieldOrNull("lfs")?.GetArray()?.Select(x => x.GetString()).ToList() ?? [];
 
             if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(path) || string.IsNullOrEmpty(repo) ||
                 string.IsNullOrEmpty(cron)) throw new InitException($"任务配置不完整，请检查{ConfigFile}文件内容。\n{task}");
@@ -48,6 +48,19 @@ public static class Config
 
         return taskInfos;
     }
+
+    private static HoconField? GetFieldOrNull(this HoconObject obj, string key)
+    {
+        try
+        {
+            return obj.GetField(key);
+        }
+        catch (Exception e)
+        {
+            return null;
+        }
+    }
+    
 }
 
 public class TaskInfo
