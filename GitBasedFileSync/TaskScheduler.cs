@@ -58,6 +58,7 @@ public class TaskScheduler
                 .UsingJobData("repo", task.Repo)
                 .UsingJobData("ignore", string.Join(",", task.Ignore))
                 .UsingJobData("lfs", string.Join(",", task.Lfs))
+                .UsingJobData("notifyWhenSuccess", task.NotifyWhenSuccess)
                 .Build();
             var trigger = TriggerBuilder.Create()
                 .WithIdentity(task.Name + "_trigger")
@@ -104,6 +105,7 @@ public class CommandJob : IJob
             var repo = context.JobDetail.JobDataMap.GetString("repo")!;
             var ignore = context.JobDetail.JobDataMap.GetString("ignore")?.Split(",").ToList() ?? [];
             var lfs = context.JobDetail.JobDataMap.GetString("lfs")?.Split(",").ToList() ?? [];
+            var notifyWhenSuccess = context.JobDetail.JobDataMap.GetBoolean("notifyWhenSuccess");
 
             var (exitCode, _, _) = Util.ExecuteGitCommand(path, ["status", "--porcelain"]);
             // 定时任务执行的时候本地仓库还不存在，说明被手动删了，直接报错
@@ -139,15 +141,20 @@ public class CommandJob : IJob
 
             log.Information("任务{name}自动同步成功", name);
             log.Information("任务{name}执行完成", name);
+            if (notifyWhenSuccess)
+            {
+                new ToastContentBuilder()
+                    .AddText("同步成功")
+                    .AddText($"任务{name}同步执行成功")
+                    .Show();
+            }
         }
         catch (Exception e)
         {
             log.Error(e, "任务{name}执行失败: {message}", name, e.Message);
             // 显示通知
             new ToastContentBuilder()
-                .AddArgument("action", "viewConversation")
-                .AddArgument("conversationId", name)
-                .AddText("Task Execution Failed")
+                .AddText("同步失败")
                 .AddText($"任务{name}执行失败: {e.Message}")
                 .Show();
         }

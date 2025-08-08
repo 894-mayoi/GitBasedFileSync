@@ -24,6 +24,7 @@ public static class Config
             var cron = task.GetFieldOrNull("cron")?.GetString();
             var ignore = task.GetFieldOrNull("ignore")?.GetArray()?.Select(x => x.GetString()).ToList() ?? [];
             var lfs = task.GetFieldOrNull("lfs")?.GetArray()?.Select(x => x.GetString()).ToList() ?? [];
+            var notifyWhenSuccess = task.GetFieldOrNull("notifyWhenSuccess")?.Value?.GetBoolean() ?? true;
 
             if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(path) || string.IsNullOrEmpty(repo) ||
                 string.IsNullOrEmpty(cron)) throw new InitException($"任务配置不完整，请检查{ConfigFile}文件内容。\n{task}");
@@ -42,7 +43,8 @@ public static class Config
                 Repo = repo,
                 Cron = cron,
                 Ignore = ignore,
-                Lfs = lfs
+                Lfs = lfs,
+                NotifyWhenSuccess = notifyWhenSuccess
             });
         }
 
@@ -60,7 +62,6 @@ public static class Config
             return null;
         }
     }
-    
 }
 
 public class TaskInfo
@@ -71,4 +72,5 @@ public class TaskInfo
     public required string Cron { get; init; }
     public required List<string> Ignore { get; init; }
     public required List<string> Lfs { get; init; }
+    public required bool NotifyWhenSuccess { get; init; }
 }
