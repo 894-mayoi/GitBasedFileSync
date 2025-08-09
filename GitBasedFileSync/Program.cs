@@ -60,6 +60,7 @@ internal static class Program
             return;
         }
 
+        Util.WindowsNotify("启动成功", $"{AppName} 已启动于系统托盘，任务调度器已准备就绪。");
         log.Information("Application startup.");
         Application.Run();
     }
