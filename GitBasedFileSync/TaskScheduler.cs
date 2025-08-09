@@ -26,7 +26,7 @@ public class TaskScheduler
         var tasks = Config.LoadTasks();
         foreach (var task in tasks)
         {
-            await InitTask(task);
+            InitTask(task);
             var job = JobBuilder.Create<CommandJob>()
                 .WithIdentity(task.Name)
                 .UsingJobData("path", task.Path)
@@ -46,18 +46,18 @@ public class TaskScheduler
     }
 
     [SuppressMessage("Performance", "CA1822:将成员标记为 static")]
-    private async Task InitTask(TaskInfo task)
+    private void InitTask(TaskInfo task)
     {
-        var (exitCode, _, _) = await Util.ExecuteGitCommand(task.Path, ["status", "--porcelain"]);
+        var (exitCode, _, _) = Util.ExecuteGitCommand(task.Path, ["status", "--porcelain"]);
         if (exitCode != 0)
         {
             // 启动时本地仓库不存在则立即初始化
             log.Information("任务{Name}的本地仓库不存在，正在初始化...", task.Name);
             Util.WindowsNotify("任务初始化", $"任务{task.Name}的正在初始化...");
-            await Util.ExecuteGitCommand(task.Path, ["init"], true);
+            Util.ExecuteGitCommand(task.Path, ["init"], true);
 
-            await Util.ExecuteGitCommand(task.Path, ["remote", "add", "origin", task.Repo], true);
-            var (code, output, error) = await Util.ExecuteGitCommand(task.Path, ["pull", "origin", "master"]);
+            Util.ExecuteGitCommand(task.Path, ["remote", "add", "origin", task.Repo], true);
+            var (code, output, error) = Util.ExecuteGitCommand(task.Path, ["pull", "origin", "master"]);
             if (code != 0)
             {
                 if (output.Contains("couldn't find remote ref master") ||
@@ -72,13 +72,13 @@ public class TaskScheduler
             }
 
             // 设置.gitignore
-            await CommandJob.SetupGitIgnore(task.Path, task.Ignore.ToHashSet());
+            CommandJob.SetupGitIgnore(task.Path, task.Ignore.ToHashSet());
             // 设置Git LFS
             if (task.Lfs.Count > 0)
-                await CommandJob.SetupGitLfs(task.Path, task.Lfs);
+                CommandJob.SetupGitLfs(task.Path, task.Lfs);
 
-            await Util.ExecuteGitCommand(task.Path, ["add", "."], true);
-            (_, output, _) = await Util.ExecuteGitCommand(task.Path, ["status", "--porcelain"], true);
+            Util.ExecuteGitCommand(task.Path, ["add", "."], true);
+            (_, output, _) = Util.ExecuteGitCommand(task.Path, ["status", "--porcelain"], true);
             if (string.IsNullOrWhiteSpace(output))
             {
                 log.Information("任务{Name}已成功初始化，没有需要提交的内容", task.Name);
@@ -87,8 +87,8 @@ public class TaskScheduler
             else
             {
                 var currentTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm");
-                await Util.ExecuteGitCommand(task.Path, ["commit", "-m", $"\"初始化同步 {currentTime}\""], true);
-                await Util.ExecuteGitCommand(task.Path, ["push", "-u", "origin", "master"], true);
+                Util.ExecuteGitCommand(task.Path, ["commit", "-m", $"\"初始化同步 {currentTime}\""], true);
+                Util.ExecuteGitCommand(task.Path, ["push", "-u", "origin", "master"], true);
                 log.Information("任务{Name}已成功初始化并推送git仓库", task.Name);
                 Util.WindowsNotify("任务初始化", $"任务{task.Name}已成功初始化并同步");
             }
@@ -97,13 +97,13 @@ public class TaskScheduler
         {
             // 启动时更新gitignore和lfs规则
             var gitIgnoreFile = Path.Combine(task.Path, ".gitignore");
-            var currentIgnore = (await File.ReadAllLinesAsync(gitIgnoreFile)).ToHashSet();
+            var currentIgnore = File.ReadAllLines(gitIgnoreFile).ToHashSet();
             if (currentIgnore.Count != task.Ignore.Count || !currentIgnore.SetEquals(task.Ignore))
-                await CommandJob.SetupGitIgnore(task.Path, task.Ignore);
+                CommandJob.SetupGitIgnore(task.Path, task.Ignore);
 
             // lfs规则直接添加，不考虑减少规则的情况
             if (task.Lfs.Count > 0)
-                await CommandJob.SetupGitLfs(task.Path, task.Lfs);
+                CommandJob.SetupGitLfs(task.Path, task.Lfs);
         }
     }
 
@@ -137,7 +137,7 @@ public class CommandJob : IJob
             var path = context.JobDetail.JobDataMap.GetString("path")!;
             var notifyWhenSuccess = context.JobDetail.JobDataMap.GetBoolean("notifyWhenSuccess");
 
-            var (exitCode, _, _) = await Util.ExecuteGitCommand(path, ["status", "--porcelain"]);
+            var (exitCode, _, _) = Util.ExecuteGitCommand(path, ["status", "--porcelain"]);
             // 定时任务执行的时候本地仓库还不存在，说明被手动删了，直接报错
             if (exitCode != 0)
             {
@@ -146,9 +146,9 @@ public class CommandJob : IJob
             }
 
             // 同步远程仓库，如果是多端同步可能有冲突会报错，就只能手动解决
-            await Util.ExecuteGitCommand(path, ["pull", "origin", "master"], true);
+            Util.ExecuteGitCommand(path, ["pull", "origin", "master"], true);
 
-            var (_, output, _) = await Util.ExecuteGitCommand(path, ["status", "--porcelain"], true);
+            var (_, output, _) = Util.ExecuteGitCommand(path, ["status", "--porcelain"], true);
             if (string.IsNullOrWhiteSpace(output))
             {
                 log.Information("任务{name}下的内容没有发生更改", name);
@@ -156,10 +156,10 @@ public class CommandJob : IJob
                 return; // 没有更改，直接返回
             }
 
-            await Util.ExecuteGitCommand(path, ["add", "."], true);
+            Util.ExecuteGitCommand(path, ["add", "."], true);
             var currentTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm");
-            await Util.ExecuteGitCommand(path, ["commit", "-m", $"\"自动同步 {currentTime}\""], true);
-            await Util.ExecuteGitCommand(path, ["push", "origin", "master"], true);
+            Util.ExecuteGitCommand(path, ["commit", "-m", $"\"自动同步 {currentTime}\""], true);
+            Util.ExecuteGitCommand(path, ["push", "origin", "master"], true);
 
             log.Information("任务{name}自动同步成功", name);
             log.Information("任务{name}执行完成", name);
@@ -173,7 +173,7 @@ public class CommandJob : IJob
         }
     }
 
-    public static async Task SetupGitIgnore(string repoPath, HashSet<string> ignorePatterns)
+    public static void SetupGitIgnore(string repoPath, HashSet<string> ignorePatterns)
     {
         // 1. .gitignore 文件路径
         var gitIgnorePath = Path.Combine(repoPath, ".gitignore");
@@ -183,24 +183,24 @@ public class CommandJob : IJob
             // 2. 将忽略模式写入文件
             if (ignorePatterns.Count > 0)
             {
-                await File.WriteAllLinesAsync(gitIgnorePath, ignorePatterns);
+                File.WriteAllLines(gitIgnorePath, ignorePatterns);
                 log.Information(".gitignore 文件已创建: {GitIgnorePath}", gitIgnorePath);
             }
             else
             {
                 // 即使没有忽略规则也创建空文件
-                await File.WriteAllTextAsync(gitIgnorePath, string.Empty);
+                File.WriteAllText(gitIgnorePath, string.Empty);
                 log.Information("创建了空的 .gitignore 文件");
             }
 
             // 3. 提交并推送 .gitignore 文件
-            await Util.ExecuteGitCommand(repoPath, ["add", ".gitignore"], true);
-            var (_, output, _) = await Util.ExecuteGitCommand(repoPath, ["status", "--porcelain"], true);
+            Util.ExecuteGitCommand(repoPath, ["add", ".gitignore"], true);
+            var (_, output, _) = Util.ExecuteGitCommand(repoPath, ["status", "--porcelain"], true);
             if (string.IsNullOrWhiteSpace(output))
                 return;
 
-            await Util.ExecuteGitCommand(repoPath, ["commit", "-m", "\"更新 .gitignore\""], true);
-            await Util.ExecuteGitCommand(repoPath, ["push", "origin", "master"], true);
+            Util.ExecuteGitCommand(repoPath, ["commit", "-m", "\"更新 .gitignore\""], true);
+            Util.ExecuteGitCommand(repoPath, ["push", "origin", "master"], true);
             log.Information("已提交并推送 .gitignore 文件到远程仓库: {RepoPath}", repoPath);
         }
         catch (Exception ex)
@@ -210,10 +210,10 @@ public class CommandJob : IJob
         }
     }
 
-    public static async Task SetupGitLfs(string repoPath, HashSet<string> lfsPatterns)
+    public static void SetupGitLfs(string repoPath, HashSet<string> lfsPatterns)
     {
         // 1. 初始化 Git LFS
-        var (exitCode, _, error) = await Util.ExecuteGitCommand(repoPath, ["lfs", "install"]);
+        var (exitCode, _, error) = Util.ExecuteGitCommand(repoPath, ["lfs", "install"]);
         if (exitCode != 0)
         {
             log.Error("初始化 Git LFS 失败: {Error}", error);
@@ -224,7 +224,7 @@ public class CommandJob : IJob
         // 2. 添加 LFS 跟踪规则
         foreach (var pattern in lfsPatterns.Where(pattern => !string.IsNullOrWhiteSpace(pattern)))
         {
-            (exitCode, var output, error) = await Util.ExecuteGitCommand(repoPath, ["lfs", "track", pattern]);
+            (exitCode, var output, error) = Util.ExecuteGitCommand(repoPath, ["lfs", "track", pattern]);
             if (exitCode != 0)
             {
                 log.Error("添加 LFS 跟踪规则失败: {Error}", error);
@@ -240,9 +240,9 @@ public class CommandJob : IJob
         // ReSharper disable once InvertIf
         if (flag)
         {
-            await Util.ExecuteGitCommand(repoPath, ["add", ".gitattributes"], true);
-            await Util.ExecuteGitCommand(repoPath, ["commit", "-m", "\"更新 LFS 跟踪规则\""], true);
-            await Util.ExecuteGitCommand(repoPath, ["push", "origin", "master"], true);
+            Util.ExecuteGitCommand(repoPath, ["add", ".gitattributes"], true);
+            Util.ExecuteGitCommand(repoPath, ["commit", "-m", "\"更新 LFS 跟踪规则\""], true);
+            Util.ExecuteGitCommand(repoPath, ["push", "origin", "master"], true);
             log.Information("已提交并推送 LFS 跟踪规则到远程仓库: {RepoPath}", repoPath);
         }
     }

@@ -1,10 +1,14 @@
 ﻿using System.Diagnostics;
 using Microsoft.Toolkit.Uwp.Notifications;
+using Serilog;
 
 namespace GitBasedFileSync;
 
 public static class Util
 {
+    // ReSharper disable once InconsistentNaming
+    private static readonly ILogger log = Log.Logger;
+
     public static (bool IsValid, string ErrorMessage) ValidatePath(string path)
     {
         // 1. 检查空值
@@ -45,7 +49,7 @@ public static class Util
         }
     }
 
-    public static async Task<(int exitCode, string output, string error)> ExecuteGitCommand(
+    public static (int exitCode, string output, string error) ExecuteGitCommand(
         string localRepoPath,
         List<string> command,
         bool throwOnError = false
@@ -66,18 +70,16 @@ public static class Util
         process.StartInfo = startInfo;
 
         process.Start();
-        var outputTask = process.StandardOutput.ReadToEndAsync();
-        var errorTask = process.StandardError.ReadToEndAsync();
 
-        var output = await outputTask;
-        var error = await errorTask;
-        await process.WaitForExitAsync();
+        var output = process.StandardOutput.ReadToEnd();
+        var error = process.StandardError.ReadToEnd();
+        process.WaitForExit();
 
         var exitCode = process.ExitCode;
         // ReSharper disable once InvertIf
         if (throwOnError && exitCode != 0)
         {
-            Log.Logger.Error("Git命令 {Cmd} 执行失败: {ExitCode} {Output} {Error}",
+            log.Error("Git命令 {Cmd} 执行失败: {ExitCode} {Output} {Error}",
                 $"{startInfo.FileName} {startInfo.Arguments}", exitCode, output, error);
             throw new Exception($"Git命令执行失败: {output} {error}");
         }
