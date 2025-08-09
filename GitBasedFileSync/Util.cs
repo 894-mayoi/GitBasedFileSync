@@ -72,9 +72,9 @@ public static class Util
         // ReSharper disable once InvertIf
         if (throwOnError && exitCode != 0)
         {
-            Log.Logger.Error("Git命令 {Cmd} 执行失败: {ExitCode}  {Error}", $"{startInfo.FileName} {startInfo.Arguments}",
-                exitCode, error);
-            throw new Exception($"Git命令执行失败: {error}");
+            Log.Logger.Error("Git命令 {Cmd} 执行失败: {ExitCode} {Output} {Error}", $"{startInfo.FileName} {startInfo.Arguments}",
+                exitCode, output, error);
+            throw new Exception($"Git命令执行失败: {output} {error}");
         }
 
         return (exitCode, output, error);
