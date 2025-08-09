@@ -12,6 +12,8 @@ internal static class Program
 
     private static TaskScheduler? _scheduler;
 
+    private static Mutex? _mutex;
+
     /// <summary>
     ///     The main entry point for the application.
     /// </summary>
@@ -21,7 +23,7 @@ internal static class Program
         ApplicationConfiguration.Initialize();
 
         // 尝试创建互斥体
-        _ = new Mutex(true, AppName, out var createdNew);
+        _mutex = new Mutex(true, AppName, out var createdNew);
 
         if (!createdNew)
         {
@@ -56,6 +58,7 @@ internal static class Program
         {
             log.Error(ex, "An error occurred during application startup.");
             MessageBox.Show($"错误: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            ReleaseResources();
             Application.Exit();
             return;
         }
@@ -100,9 +103,26 @@ internal static class Program
             return;
         }
 
-        _scheduler?.Stop().Wait();
+        ReleaseResources();
 
         log.Information("Application exit.");
         Application.Exit();
+    }
+
+    /// <summary>
+    /// 释放资源
+    /// </summary>
+    private static void ReleaseResources()
+    {
+        try
+        {
+            _scheduler?.Stop().Wait();
+            _mutex?.ReleaseMutex();
+            _mutex?.Dispose();
+        }
+        catch (Exception)
+        {
+            // ignore
+        }
     }
 }

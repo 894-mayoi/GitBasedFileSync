@@ -120,7 +120,6 @@ public class TaskScheduler
         await _scheduler.Shutdown();
         _scheduler = null;
         log.Information("任务调度器已停止");
-        // configWatcher?.Dispose();
     }
 }
 
