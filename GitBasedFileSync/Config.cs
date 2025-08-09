@@ -1,17 +1,33 @@
 ﻿using Hocon;
 using Quartz;
+using Serilog;
 
 namespace GitBasedFileSync;
 
 public static class Config
 {
+    // ReSharper disable once InconsistentNaming
+    private static readonly ILogger log = Log.Logger;
+    
     private const string ConfigFile = "app-settings.conf";
+
+    public static Setting AppSetting { get; private set; } = new() { DebugAppMode = false, EcoMode = true };
 
     public static List<TaskInfo> LoadTasks()
     {
         var taskInfos = new List<TaskInfo>();
 
         var hoconConfig = HoconConfigurationFactory.FromFile(ConfigFile);
+
+        var setting = hoconConfig.GetConfig("app.setting");
+        var debugAppMode = setting?.GetBooleanOrNull("debugAppMode") ?? false;
+        var ecoMode = setting?.GetBooleanOrNull("ecoMode") ?? true;
+        AppSetting = new Setting { DebugAppMode = debugAppMode, EcoMode = ecoMode };
+        if (AppSetting.DebugAppMode)
+        {
+            log.Information("当前处于应用调试模式，不会执行任何同步任务。");
+            return [];
+        }
 
         var tasks = hoconConfig.GetObjectList("app.tasks");
         if (tasks == null || !tasks.Any()) throw new InitException($"未找到任务配置，请检查{ConfigFile}文件内容。");
@@ -62,6 +78,18 @@ public static class Config
             return null;
         }
     }
+
+    private static bool? GetBooleanOrNull(this Hocon.Config config, string key)
+    {
+        try
+        {
+            return config.GetBoolean(key);
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
 }
 
 public class TaskInfo
@@ -73,4 +101,10 @@ public class TaskInfo
     public required HashSet<string> Ignore { get; init; }
     public required HashSet<string> Lfs { get; init; }
     public required bool NotifyWhenSuccess { get; init; }
+}
+
+public class Setting
+{
+    public required bool DebugAppMode { get; init; }
+    public required bool EcoMode { get; init; }
 }

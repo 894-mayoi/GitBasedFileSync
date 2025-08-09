@@ -63,6 +63,19 @@ internal static class Program
             return;
         }
 
+        if (Config.AppSetting.EcoMode)
+            try
+            {
+                EcoMode.EnableEfficiencyMode();
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show($"错误: {e.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                ReleaseResources();
+                Application.Exit();
+                return;
+            }
+
         Util.WindowsNotify("启动成功", $"{AppName} 已启动于系统托盘，任务调度器已准备就绪。");
         log.Information("Application startup.");
         Application.Run();
@@ -110,7 +123,7 @@ internal static class Program
     }
 
     /// <summary>
-    /// 释放资源
+    ///     释放资源
     /// </summary>
     private static void ReleaseResources()
     {

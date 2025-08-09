@@ -102,6 +102,17 @@ app {
             notifyWhenSuccess = true
         }
     ]
+
+    setting {
+        // 是否开启应用调试模式，调试模式会跳过同步任务的加载、执行
+        // 仅用于开发，便于确认应用自身的功能是否正常
+        // 默认为false
+        debugAppMode = false
+
+        // 是否开启效率模式，效率模式下，应用会减少部分资源占用
+        // 默认为true
+        ecoMode = true
+    }
 }
 ```
 
