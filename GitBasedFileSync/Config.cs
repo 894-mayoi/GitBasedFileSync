@@ -22,8 +22,8 @@ public static class Config
             var path = task.GetFieldOrNull("path")?.GetString();
             var repo = task.GetFieldOrNull("repo")?.GetString();
             var cron = task.GetFieldOrNull("cron")?.GetString();
-            var ignore = task.GetFieldOrNull("ignore")?.GetArray()?.Select(x => x.GetString()).ToList() ?? [];
-            var lfs = task.GetFieldOrNull("lfs")?.GetArray()?.Select(x => x.GetString()).ToList() ?? [];
+            var ignore = task.GetFieldOrNull("ignore")?.GetArray()?.Select(x => x.GetString()).ToHashSet() ?? [];
+            var lfs = task.GetFieldOrNull("lfs")?.GetArray()?.Select(x => x.GetString()).ToHashSet() ?? [];
             var notifyWhenSuccess = task.GetFieldOrNull("notifyWhenSuccess")?.Value?.GetBoolean() ?? true;
 
             if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(path) || string.IsNullOrEmpty(repo) ||
@@ -57,7 +57,7 @@ public static class Config
         {
             return obj.GetField(key);
         }
-        catch (Exception e)
+        catch (Exception)
         {
             return null;
         }
@@ -70,7 +70,7 @@ public class TaskInfo
     public required string Path { get; init; }
     public required string Repo { get; init; }
     public required string Cron { get; init; }
-    public required List<string> Ignore { get; init; }
-    public required List<string> Lfs { get; init; }
+    public required HashSet<string> Ignore { get; init; }
+    public required HashSet<string> Lfs { get; init; }
     public required bool NotifyWhenSuccess { get; init; }
 }

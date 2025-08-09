@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using Microsoft.Toolkit.Uwp.Notifications;
 
 namespace GitBasedFileSync;
 
@@ -72,11 +73,19 @@ public static class Util
         // ReSharper disable once InvertIf
         if (throwOnError && exitCode != 0)
         {
-            Log.Logger.Error("Git命令 {Cmd} 执行失败: {ExitCode} {Output} {Error}", $"{startInfo.FileName} {startInfo.Arguments}",
-                exitCode, output, error);
+            Log.Logger.Error("Git命令 {Cmd} 执行失败: {ExitCode} {Output} {Error}",
+                $"{startInfo.FileName} {startInfo.Arguments}", exitCode, output, error);
             throw new Exception($"Git命令执行失败: {output} {error}");
         }
 
         return (exitCode, output, error);
+    }
+
+    public static void WindowsNotify(string title, string message)
+    {
+        new ToastContentBuilder()
+            .AddText(title)
+            .AddText(message)
+            .Show();
     }
 }
