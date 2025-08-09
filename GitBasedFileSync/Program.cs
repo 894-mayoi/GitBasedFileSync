@@ -5,7 +5,7 @@ namespace GitBasedFileSync;
 
 internal static class Program
 {
-    private const string AppName = "GitBasedFileSync";
+    public const string AppName = "GitBasedFileSync";
 
     // ReSharper disable once InconsistentNaming
     private static readonly ILogger log = Log.Logger;
@@ -75,6 +75,9 @@ internal static class Program
                 Application.Exit();
                 return;
             }
+
+        // 设置开机自启
+        AutoStart.SetAutoStart(Config.AppSetting.AutoStart);
 
         Util.WindowsNotify("启动成功", $"{AppName} 已启动于系统托盘，任务调度器已准备就绪。");
         log.Information("Application startup.");

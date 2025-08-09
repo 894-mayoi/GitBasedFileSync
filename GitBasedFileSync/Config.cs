@@ -6,31 +6,37 @@ namespace GitBasedFileSync;
 
 public static class Config
 {
-    // ReSharper disable once InconsistentNaming
-    private static readonly ILogger log = Log.Logger;
-    
     private const string ConfigFile = "app-settings.conf";
 
-    public static Setting AppSetting { get; private set; } = new() { DebugAppMode = false, EcoMode = true };
+    // ReSharper disable once InconsistentNaming
+    private static readonly ILogger log = Log.Logger;
 
-    public static List<TaskInfo> LoadTasks()
+    public static readonly Setting AppSetting = LoadAppSetting();
+
+    private static Setting LoadAppSetting()
     {
-        var taskInfos = new List<TaskInfo>();
-
         var hoconConfig = HoconConfigurationFactory.FromFile(ConfigFile);
-
         var setting = hoconConfig.GetConfig("app.setting");
         var debugAppMode = setting?.GetBooleanOrNull("debugAppMode") ?? false;
         var ecoMode = setting?.GetBooleanOrNull("ecoMode") ?? true;
-        AppSetting = new Setting { DebugAppMode = debugAppMode, EcoMode = ecoMode };
+        var autoStart = setting?.GetBooleanOrNull("autoStart") ?? false;
+        return new Setting { DebugAppMode = debugAppMode, EcoMode = ecoMode, AutoStart = autoStart };
+    }
+
+    public static List<TaskInfo> LoadTasks()
+    {
         if (AppSetting.DebugAppMode)
         {
             log.Information("当前处于应用调试模式，不会执行任何同步任务。");
             return [];
         }
 
+        var hoconConfig = HoconConfigurationFactory.FromFile(ConfigFile);
+
         var tasks = hoconConfig.GetObjectList("app.tasks");
         if (tasks == null || !tasks.Any()) throw new InitException($"未找到任务配置，请检查{ConfigFile}文件内容。");
+
+        var taskInfos = new List<TaskInfo>();
         var names = new HashSet<string>();
         foreach (var task in tasks)
         {
@@ -107,4 +113,5 @@ public class Setting
 {
     public required bool DebugAppMode { get; init; }
     public required bool EcoMode { get; init; }
+    public required bool AutoStart { get; init; }
 }

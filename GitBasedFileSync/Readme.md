@@ -112,6 +112,10 @@ app {
         // 是否开启效率模式，效率模式下，应用会减少部分资源占用
         // 默认为true
         ecoMode = true
+
+        // 是否启用开机自启
+        // 默认为false
+        autoStart = false
     }
 }
 ```
