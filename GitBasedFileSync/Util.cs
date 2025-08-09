@@ -45,7 +45,7 @@ public static class Util
         }
     }
 
-    public static (int exitCode, string output, string error) ExecuteGitCommand(
+    public static async Task<(int exitCode, string output, string error)> ExecuteGitCommand(
         string localRepoPath,
         List<string> command,
         bool throwOnError = false
@@ -66,9 +66,13 @@ public static class Util
         process.StartInfo = startInfo;
 
         process.Start();
-        var output = process.StandardOutput.ReadToEnd();
-        var error = process.StandardError.ReadToEnd();
-        process.WaitForExit(); // 等待命令执行完成
+        var outputTask = process.StandardOutput.ReadToEndAsync();
+        var errorTask = process.StandardError.ReadToEndAsync();
+
+        var output = await outputTask;
+        var error = await errorTask;
+        await process.WaitForExitAsync();
+
         var exitCode = process.ExitCode;
         // ReSharper disable once InvertIf
         if (throwOnError && exitCode != 0)
