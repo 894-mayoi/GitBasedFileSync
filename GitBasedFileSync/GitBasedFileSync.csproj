@@ -22,9 +22,6 @@
         <None Update="app-settings.conf">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
-        <None Update="icon.ico">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
         <None Update="Readme.md">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>

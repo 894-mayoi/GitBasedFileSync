@@ -36,7 +36,7 @@ internal static class Program
         var trayIcon = new NotifyIcon();
 
         // 设置图标的属性
-        trayIcon.Icon = new Icon("icon.ico");
+        trayIcon.Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
         trayIcon.Text = AppName;
         trayIcon.Visible = true;
 
