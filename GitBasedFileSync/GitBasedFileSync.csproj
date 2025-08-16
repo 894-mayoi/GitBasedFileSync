@@ -8,6 +8,17 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <ApplicationIcon>icon.ico</ApplicationIcon>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <Company>github.com/894-mayoi</Company>
+        <AssemblyVersion>1.0.0</AssemblyVersion>
+        <NeutralLanguage>zh-CN</NeutralLanguage>
+        <Authors>github.com/894-mayoi</Authors>
+        <Description>基于Git的文件同步工具</Description>
+        <PackageProjectUrl>https://github.com/894-mayoi/GitBasedFileSync</PackageProjectUrl>
+        <FileVersion>1.0.0</FileVersion>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+        <DebugType>none</DebugType>
     </PropertyGroup>
 
     <ItemGroup>
